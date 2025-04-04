@@ -62,20 +62,36 @@ def scrape_page_content(url):
 def scrape_with_selenium(url):
     """Scrapes JavaScript-rendered pages using Selenium."""
     logging.info(f"🌐 Using Selenium for {url}")
-    
+
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
-    
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    driver.get(url)
-    
-    soup = BeautifulSoup(driver.page_source, "html.parser")
-    driver.quit()
-    
-    return extract_data(soup, url)
+    options.add_argument("--disable-dev-shm-usage")
+
+    try:
+        # Try to use the system ChromeDriver first (for production)
+        chrome_path = os.environ.get("CHROME_BIN", "/usr/bin/chromium")
+        chromedriver_path = os.environ.get("CHROMEDRIVER_PATH", "/usr/bin/chromedriver")
+
+        if os.path.exists(chromedriver_path):
+            service = Service(executable_path=chromedriver_path)
+            driver = webdriver.Chrome(service=service, options=options)
+        else:
+            # Fall back to ChromeDriverManager for local development
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=options)
+
+        driver.get(url)
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        driver.quit()
+        return extract_data(soup, url)
+    except Exception as e:
+        logging.error(f"❌ Selenium error: {e}")
+        # Fall back to regular requests if Selenium fails
+        response = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(response.text, "html.parser")
+        return extract_data(soup, url)
 
 def extract_data(soup, url="Unknown"):
     """Extracts structured data from a webpage."""

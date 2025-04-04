@@ -27,6 +27,14 @@
    - Any other environment variables your frontend needs
 5. Deploy your application
 
+## Selenium and Web Scraping
+
+This project uses Selenium for web scraping, which requires Chrome and ChromeDriver. The Dockerfile is configured to install these dependencies automatically. If you're running the project locally, you'll need to:
+
+1. Install Chrome or Chromium browser
+2. Install ChromeDriver that matches your Chrome version
+3. Make sure the `selenium` and `webdriver-manager` packages are installed
+
 ## Troubleshooting
 
 If you encounter any issues during deployment:
@@ -36,5 +44,9 @@ If you encounter any issues during deployment:
 3. Verify that your database is properly configured
 4. Check that your frontend is correctly pointing to your backend API
 5. If you need to use packages that require compilation (like `psycopg2`), use pre-compiled versions (like `psycopg2-binary`) instead
+6. For Selenium issues:
+   - Ensure Chrome and ChromeDriver are properly installed
+   - Check that the paths in the environment variables (`CHROME_BIN` and `CHROMEDRIVER_PATH`) are correct
+   - Try running with the `--no-sandbox` and `--disable-dev-shm-usage` options
 
 For more information, refer to the Railway and Vercel documentation.
