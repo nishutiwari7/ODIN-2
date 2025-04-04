@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "chmod +x build.sh && ./build.sh"
+
+[deploy]
+startCommand = "cd odin_backend && gunicorn odin_backend.wsgi:application --log-file -"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 10
