@@ -11,24 +11,24 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Load environment variables from .env file if it exists
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t!6w-5co7rxl(!3w7t#di2=d1+lbk1p=#=9x_-7ynanip5cj*-'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-t!6w-5co7rxl(!3w7t#di2=d1+lbk1p=#=9x_-7ynanip5cj*-')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,26 +39,30 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rest_framework",
     "crawler",
-    'corsheaders',  
-    
+    'corsheaders',
+    'whitenoise.runserver_nostatic',
 ]
 
-ALLOWED_HOSTS = ["*"]
-
-CORS_ALLOW_ALL_ORIGINS = True  
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add whitenoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Moved up before CommonMiddleware
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+# Add your frontend URL to CSRF_TRUSTED_ORIGINS
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "https://*.railway.app",
+    "https://*.vercel.app"
+]
 
 
 ROOT_URLCONF = 'odin_backend.urls'
@@ -85,12 +89,21 @@ WSGI_APPLICATION = 'odin_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Use PostgreSQL in production (Railway), SQLite in development
+if os.environ.get('DATABASE_URL'):
+    # Parse database URL for Railway
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
     }
-}
+else:
+    # Use SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -127,9 +140,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-# Set the base directory
-BASE_DIR = Path(__file__).resolve().parent.parent
-print  (BASE_DIR)
 # Configure static files settings
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
@@ -137,21 +147,23 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+# Enable WhiteNoise compression and caching
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Razorpay Configuration
-RAZORPAY_KEY_ID = "rzp_live_JCExPjTteNgBfp"
-RAZORPAY_KEY_SECRET = "FIzzzQeXFAJRACGj4TRjojYd"
-RAZORPAY_WEBHOOK_SECRET = "Winner@2003"
-RAZORPAY_PLAN_ID = "plan_QDLsfNsqsxULWn"
-RAZORPAY_SUBSCRIPTION_ID = "sub_QDRfqjnj567L55"
-RAZORPAY_SUBSCRIPTION_LINK = "https://rzp.io/rzp/NOdF9p5b"
-WEBHOOK_URL = "https://astraeusnextgen.com/verification"
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', "rzp_live_JCExPjTteNgBfp")
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', "FIzzzQeXFAJRACGj4TRjojYd")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', "Winner@2003")
+RAZORPAY_PLAN_ID = os.environ.get('RAZORPAY_PLAN_ID', "plan_QDLsfNsqsxULWn")
+RAZORPAY_SUBSCRIPTION_ID = os.environ.get('RAZORPAY_SUBSCRIPTION_ID', "sub_QDRfqjnj567L55")
+RAZORPAY_SUBSCRIPTION_LINK = os.environ.get('RAZORPAY_SUBSCRIPTION_LINK', "https://rzp.io/rzp/NOdF9p5b")
+WEBHOOK_URL = os.environ.get('WEBHOOK_URL', "https://astraeusnextgen.com/verification")
 
-
-RAZORPAY_PLAN_ID1 = "plan_QDLtHDl4bb7LQd"
-RAZORPAY_SUBSCRIPTION_ID1 = "sub_QDRgsHdV69HCt2"
-RAZORPAY_SUBSCRIPTION_LINK1 = "https://rzp.io/rzp/Qli0K4kY"
+RAZORPAY_PLAN_ID1 = os.environ.get('RAZORPAY_PLAN_ID1', "plan_QDLtHDl4bb7LQd")
+RAZORPAY_SUBSCRIPTION_ID1 = os.environ.get('RAZORPAY_SUBSCRIPTION_ID1', "sub_QDRgsHdV69HCt2")
+RAZORPAY_SUBSCRIPTION_LINK1 = os.environ.get('RAZORPAY_SUBSCRIPTION_LINK1', "https://rzp.io/rzp/Qli0K4kY")
