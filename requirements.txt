@@ -223,7 +223,6 @@ python-dateutil
 python-docx
 python-dotenv
 python-googlesearch
-python-magic-bin
 python-nmap
 python-whois
 pyttsx3
